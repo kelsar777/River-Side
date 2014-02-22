@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<meta charset="UTF-8">
+<title>River Side</title>
+
+<script>
+
+function drawBgr(ctx, bgrImg, k) 
+{
+	ctx.drawImage(bgrImg, 0,bgrImg.height-640-k, 640,640,  0,0,640,640); 
+	
+}
+
+function drawDelta(ctx, deltaImg, spritePos, x,y) 
+{
+	var swd = deltaImg.width/4, shg = deltaImg.height;
+	ctx.drawImage(deltaImg, spritePos*swd,0,swd,shg,  x,y,swd,shg); 
+	
+}
+
+function isCollision(ctx, ctrlPts, spritePos, swd, x,y)
+{
+	for (var i=0; i<ctrlPts[spritePos].length; i++) {
+		var ctrlp = ctrlPts[spritePos][i];
+		var p = ctx.getImageData(x+ctrlp[0]-spritePos*swd, y+ctrlp[1], 1, 1).data;
+		if (! (p[0]==39 && p[1]==145 && p[2]==227)) return true;  //water color
+	}
+	return false;
+}
+
+
+</script>
+</head>
+<body>
+<canvas id="board" width="640" height="640"></canvas>
+
+
+<script>
+	bgrImg = new Image();
+	bgrImg.src = './backgrounds/river1.png';
+	deltaImg = new Image();
+	deltaImg.src = './sprites/delta.png';
+	console.log(deltaImg.width,deltaImg.height);
+	
+	var x = 300;
+	var deltaSprite = 0;
+	
+	var ctrlPts = [
+	 [ [34,1],[0,70],[67,70] ],
+	 [ [125,3],[100,60],[165,80] ],
+	 [ [240,3],[227,80],[292,60] ]
+	];
+	
+	
+	onkeydown = function(e) {
+		k = e.keyCode;
+		console.log('keypressed: ', k);
+		if (k==37) {   x -= 4; deltaSprite = 2; }
+		else if (k==39)  { x += 4; deltaSprite = 1; }
+	}
+	onkeyup = function(e) {
+		k = e.keyCode;
+		console.log('keyupped: ', k);
+		//~ if (k==37) {   x -= 4; deltaSprite = 2; }
+		//~ else if (k==39)  { x += 4; deltaSprite = 1; }
+		deltaSprite = 0;
+	}
+	
+  window.requestAnimFrame = (function(callback) {
+        return window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.oRequestAnimationFrame || window.msRequestAnimationFrame ||
+        function(callback) {
+          window.setTimeout(callback, 1000 / 60);
+        };
+      })();
+	
+	var twait = 0;
+	var i = 1;
+      function animate() {
+        var canv = document.getElementById('board');
+        var ctx = canv.getContext('2d');
+
+        // update
+
+        // clear
+        ctx.clearRect(0, 0, canv.width, canv.height);
+
+        // draw stuff
+        
+        drawBgr(ctx, bgrImg, i);
+        
+        if (deltaSprite!=3 && isCollision(ctx, ctrlPts, deltaSprite, deltaImg.width/4, x,400)) {
+			console.log('COLLISION!');
+			deltaSprite = 3;
+		}
+        
+        drawDelta(ctx, deltaImg, deltaSprite,x,400); 
+        if (deltaSprite==3) { //collision
+			twait += 1;
+		}
+		else
+			i+=0.7;
+        if (i>=800) return;
+		if (twait > 100) {
+			twait = 0;
+			i = 0;
+			x = 300;
+			deltaSprite = 0;
+		}
+		
+        // request new frame
+        requestAnimFrame(function() {
+          animate();
+        });
+      }
+      animate();
+
+</script>
+
+</body>
+</html>
+
